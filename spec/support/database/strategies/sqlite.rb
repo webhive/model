@@ -2,6 +2,7 @@
 
 require_relative "sql"
 require "pathname"
+require "tmpdir"
 
 module Database
   module Strategies
@@ -17,6 +18,7 @@ module Database
 
         def export_env
           super
+          puts "================= #{database_name}"
           ENV["HANAMI_DATABASE_URL"] = "jdbc:sqlite://#{database_name}"
         end
       end
@@ -36,7 +38,8 @@ module Database
       protected
 
       def database_name
-        Pathname.new(__dir__).join("..", "..", "..", "..", "tmp", "sqlite", "#{super}.sqlite3").to_s
+        dir = Dir.mktmpdir("sqlite")
+        Pathname.new(dir).join("#{super}.sqlite3").to_s
       end
 
       def load_dependencies

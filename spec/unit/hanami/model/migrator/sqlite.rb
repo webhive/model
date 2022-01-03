@@ -35,7 +35,8 @@ RSpec.shared_examples "migrator_sqlite" do
 
   describe "SQLite filesystem" do
     let(:database) do
-      Pathname.new("#{__dir__}/../../../../../tmp/create-#{random}.sqlite3").expand_path
+      dir = Dir.mktmpdir("sqlite")
+      Pathname.new(dir).join("create-#{random}.sqlite3").to_s
     end
 
     describe "create" do
@@ -52,11 +53,13 @@ RSpec.shared_examples "migrator_sqlite" do
 
           error = Platform.match do
             os(:macos).engine(:jruby) { Java::JavaLang::RuntimeException }
+            os(:macos).engine(:ruby) { Errno::EROFS }
             default { Hanami::Model::MigrationError }
           end
 
           message = Platform.match do
             os(:macos).engine(:jruby) { "Unhandled IOException: java.io.IOException: unhandled errno: Operation not permitted" }
+            os(:macos).engine(:ruby) { "Read-only file system @ rb_sysopen - /usr/bin/create.sqlite3" }
             default { "Permission denied: /usr/bin/create.sqlite3" }
           end
 
